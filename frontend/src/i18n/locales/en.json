@@ -1,0 +1,560 @@
+{
+  "common": {
+    "actions": {
+      "cancel": "Cancel",
+      "back": "Back",
+      "continue": "Continue",
+      "edit": "Edit",
+      "deactivate": "Deactivate",
+      "save": "Save",
+      "submit": "Submit"
+    },
+    "status": {
+      "loading": "Loading..."
+    },
+    "layout": {
+      "brand": {
+        "name": "ClaimFlow",
+        "logo_abbreviation": "CF"
+      },
+      "header": {
+        "title": "Insurance Claim Processing",
+        "welcome": "Welcome, {{name}}",
+        "welcome_prefix": "Welcome,",
+        "profile_title": "Profile",
+        "logout_label": "Logout"
+      },
+      "nav": {
+        "dashboard": "Dashboard",
+        "claims": "Claims",
+        "new_claim": "New Claim",
+        "users": "Users",
+        "analytics": "Analytics",
+        "profile": "Profile"
+      }
+    },
+    "landing": {
+      "hero": {
+        "platform_active": "Platform Active",
+        "brand": "ClaimFlow",
+        "tagline": "Intelligent Claims Management",
+        "subtitle": "India's smartest insurance claim processing platform"
+      },
+      "personas": {
+        "policyholder_title": "Policyholder",
+        "policyholder_description": "File claims, track status, and manage your insurance policies",
+        "adjudicator_title": "Claims Adjudicator",
+        "adjudicator_description": "Review, assess, and process insurance claims efficiently",
+        "admin_title": "System Admin",
+        "admin_description": "Manage users, monitor system health, and configure settings",
+        "sign_in": "Sign In"
+      },
+      "footer": {
+        "powered_by": "Powered by",
+        "aws": "AWS"
+      }
+    },
+    "login": {
+      "personas": {
+        "policyholder_title": "Policyholder Portal",
+        "policyholder_subtitle": "Access your claims and policy information",
+        "policyholder_description": "Protect your family with comprehensive insurance coverage",
+        "adjudicator_title": "Claims Adjudicator Portal",
+        "adjudicator_subtitle": "Review and process insurance claims",
+        "adjudicator_description": "Efficient claim assessment and processing tools",
+        "admin_title": "System Administration",
+        "admin_subtitle": "Manage platform settings and users",
+        "admin_description": "Complete system control and monitoring dashboard"
+      },
+      "navigation": {
+        "back_home": "Back to Home"
+      },
+      "form": {
+        "user_id": "User ID",
+        "user_id_placeholder": "Enter your user ID",
+        "password": "Password",
+        "password_placeholder": "Enter your password",
+        "sign_in": "Sign In",
+        "signing_in": "Signing in..."
+      },
+      "register": {
+        "prompt": "Don't have an account?",
+        "link": "Register here"
+      },
+      "footer": {
+        "copyright": "ClaimFlow © {{year}} · Powered by AWS"
+      }
+    },
+    "register": {
+      "navigation": {
+        "back_to_login": "Back to Login"
+      },
+      "header": {
+        "title": "Create Account",
+        "subtitle": "Register as a Policyholder"
+      },
+      "form": {
+        "full_name": "Full Name",
+        "full_name_placeholder": "Your full name",
+        "user_id": "User ID",
+        "user_id_placeholder": "Choose a user ID",
+        "email": "Email",
+        "email_placeholder": "your@email.com",
+        "phone": "Phone (optional)",
+        "phone_placeholder": "+91 98765 43210",
+        "password": "Password",
+        "password_placeholder": "Min 8 characters",
+        "confirm_password": "Confirm Password",
+        "confirm_password_placeholder": "Repeat password",
+        "submit": "Create Account",
+        "submitting": "Creating account..."
+      },
+      "errors": {
+        "passwords_do_not_match": "Passwords do not match",
+        "password_too_short": "Password must be at least 8 characters",
+        "registration_failed": "Registration failed. Please try again."
+      },
+      "login": {
+        "prompt": "Already have an account?",
+        "link": "Sign in"
+      }
+    },
+    "dashboard": {
+      "policyholder": {
+        "title": "My Claims",
+        "subtitle": "Track and manage your insurance claims",
+        "file_new_claim": "File New Claim"
+      },
+      "adjudicator": {
+        "title": "Claims Queue",
+        "subtitle": "Review and process insurance claims"
+      },
+      "admin": {
+        "title": "System Overview",
+        "subtitle": "Monitor platform health and metrics",
+        "simulating": "⏳ Simulating...",
+        "simulate": "🎬 Simulate Claim Lifecycle",
+        "last_checked": "Last checked: {{time}}",
+        "seconds_ago": "{{count}}s ago"
+      },
+      "stats": {
+        "total_claims": "Total Claims",
+        "pending": "Pending",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "settled": "Settled",
+        "closed": "Closed"
+      },
+      "recent_claims": {
+        "title": "Recent Claims",
+        "empty": "No claims yet. File your first claim to get started.",
+        "view_all": "View all claims →"
+      },
+      "all_claims": {
+        "title": "All Claims",
+        "empty": "No claims found in the system."
+      },
+      "claim": {
+        "type_suffix": "Claim",
+        "id_label": "ID:"
+      },
+      "service_health": {
+        "title": "Service Health",
+        "healthy": "Healthy",
+        "unhealthy": "Unhealthy",
+        "not_connected": "Not Connected to ALB",
+        "checking": "Checking...",
+        "response_prefix": "Response:",
+        "response_value": "{{ms}}ms"
+      },
+      "services": {
+        "auth": "Auth Service",
+        "claims": "Claims Service",
+        "fraud": "Fraud Detection",
+        "documents": "Document Service",
+        "notifications": "Notification Service",
+        "rules": "Rules Engine",
+        "analytics": "Analytics Service"
+      },
+      "metrics": {
+        "title": "System Metrics",
+        "platform_status": "Platform Status",
+        "operational": "Operational",
+        "degraded": "Degraded",
+        "down": "Down",
+        "api_response_time": "API Response Time",
+        "uptime": "Uptime",
+        "uptime_value": "99.9%",
+        "active_users": "Active Users",
+        "no_value": "--"
+      },
+      "api_times": {
+        "title": "API Response Times",
+        "endpoint": "Endpoint",
+        "method": "Method",
+        "method_get": "GET",
+        "avg_ms": "Avg (ms)",
+        "status": "Status",
+        "status_ok": "OK",
+        "status_error": "Error",
+        "status_checking": "..."
+      },
+      "sessions": {
+        "title": "Active Sessions",
+        "registered_users": "Registered users"
+      },
+      "activity": {
+        "title": "Recent Activity",
+        "empty": "No recent activity",
+        "claim_suffix": "claim"
+      },
+      "simulation": {
+        "success": "✅ Simulated {{type}} claim (₹{{amount}}) → {{status}}",
+        "failed": "❌ Simulation failed: {{message}}",
+        "unknown_error": "Unknown error"
+      }
+    },
+    "claim_list": {
+      "header": {
+        "title": "Claims",
+        "subtitle_policyholder": "Your insurance claims",
+        "subtitle_other": "All insurance claims",
+        "new_claim": "New Claim"
+      },
+      "filters": {
+        "label": "Filters:",
+        "by_status_aria": "Filter by status",
+        "by_type_aria": "Filter by type",
+        "all_statuses": "All Statuses",
+        "draft": "Draft",
+        "submitted": "Submitted",
+        "under_review": "Under Review",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "all_types": "All Types",
+        "health": "Health",
+        "motor": "Motor",
+        "property": "Property",
+        "travel": "Travel"
+      },
+      "errors": {
+        "load_failed": "Failed to load claims"
+      },
+      "empty": {
+        "no_claims": "No claims found"
+      },
+      "table": {
+        "claim_id": "Claim ID",
+        "type": "Type",
+        "amount": "Amount (₹)",
+        "status": "Status",
+        "date": "Date"
+      }
+    },
+    "new_claim": {
+      "header": {
+        "title": "File New Claim",
+        "subtitle": "Submit a new insurance claim in a few simple steps"
+      },
+      "steps": {
+        "type": "Type",
+        "details": "Details",
+        "documents": "Documents",
+        "review": "Review"
+      },
+      "type": {
+        "title": "Select Claim Type",
+        "subtitle": "Choose the category that best describes your claim",
+        "health_label": "Health",
+        "health_description": "Medical expenses, hospitalization, treatments",
+        "motor_label": "Motor",
+        "motor_description": "Vehicle damage, accidents, theft",
+        "property_label": "Property",
+        "property_description": "Home damage, fire, natural disasters",
+        "travel_label": "Travel",
+        "travel_description": "Trip cancellation, lost baggage, medical abroad"
+      },
+      "details": {
+        "title": "Claim Details",
+        "subtitle": "Provide information about your claim",
+        "amount": "Amount (₹)",
+        "amount_placeholder": "e.g. 50000",
+        "policy_number": "Policy Number",
+        "policy_number_placeholder": "e.g. POL-2024-001",
+        "incident_date": "Incident Date",
+        "description": "Description",
+        "description_placeholder": "Describe what happened and the nature of your claim...",
+        "description_min_length": "Description must be at least 10 characters ({{count}}/10)"
+      },
+      "documents": {
+        "title": "Supporting Documents",
+        "subtitle": "Upload any relevant documents to support your claim",
+        "select_files": "Select files",
+        "selected_files": "Selected files ({{count}})",
+        "remove_aria": "Remove {{name}}",
+        "note_label": "Note:",
+        "note_text": "Files will be uploaded after claim is created. You can proceed without documents and upload them later from the claim details page."
+      },
+      "review": {
+        "title": "Review Your Claim",
+        "subtitle": "Please verify all details before submitting",
+        "claim_type": "Claim Type",
+        "amount": "Amount",
+        "policy_number": "Policy Number",
+        "incident_date": "Incident Date",
+        "documents": "Documents",
+        "description": "Description",
+        "not_provided": "Not provided",
+        "no_documents": "None",
+        "file_count": "{{count}} file(s) selected",
+        "no_description": "Not provided"
+      },
+      "buttons": {
+        "back": "Back",
+        "continue": "Continue",
+        "submit": "Submit Claim",
+        "submitting": "Submitting..."
+      },
+      "errors": {
+        "create_failed": "Failed to create claim. Please try again."
+      }
+    },
+    "claim_detail": {
+      "navigation": {
+        "back_to_claims": "Back to Claims"
+      },
+      "header": {
+        "claim_suffix": "Claim",
+        "id_label": "ID:"
+      },
+      "errors": {
+        "load_failed": "Failed to load claim details",
+        "not_found": "Claim not found",
+        "action_failed": "Action failed. Please try again.",
+        "invalid_settlement": "Please enter a valid settlement amount",
+        "rejection_too_short": "Rejection reason must be at least 10 characters"
+      },
+      "timeline": {
+        "title": "Claim Journey",
+        "draft": "Draft",
+        "submitted": "Submitted",
+        "under_review": "Under Review",
+        "approved": "Approved",
+        "rejected": "Rejected",
+        "settlement": "Settlement",
+        "closed": "Closed"
+      },
+      "details": {
+        "title": "Claim Details",
+        "claim_type": "Claim Type",
+        "amount": "Amount",
+        "policy_number": "Policy Number",
+        "status": "Status",
+        "incident_date": "Incident Date",
+        "created_on": "Created On",
+        "submitted_on": "Submitted On",
+        "resolved_on": "Resolved On",
+        "claimant": "Claimant",
+        "fraud_score": "Fraud Score",
+        "not_provided": "Not provided",
+        "not_submitted": "Not yet submitted"
+      },
+      "description": {
+        "title": "Description",
+        "empty": "No description provided"
+      },
+      "documents": {
+        "title": "Documents ({{count}})",
+        "empty": "No documents uploaded for this claim.",
+        "loading": "Loading documents..."
+      },
+      "history": {
+        "title": "Claim History",
+        "by_user": " • by {{user}}"
+      },
+      "actions": {
+        "submit": "Submit Claim",
+        "submitting": "Submitting...",
+        "approve": "Approve",
+        "approving": "Approving...",
+        "confirm_approve": "Confirm Approval",
+        "reject": "Reject",
+        "rejecting": "Rejecting...",
+        "confirm_reject": "Confirm Rejection",
+        "settle": "Initiate Settlement",
+        "processing": "Processing...",
+        "close": "Close Claim",
+        "closing": "Closing..."
+      },
+      "approve_modal": {
+        "title": "Approve Claim",
+        "settlement_amount": "Settlement Amount (₹)",
+        "settlement_placeholder": "Enter settlement amount",
+        "notes": "Notes (optional)",
+        "notes_placeholder": "Add any notes...",
+        "cancel": "Cancel"
+      },
+      "reject_modal": {
+        "title": "Reject Claim",
+        "reason": "Reason for Rejection",
+        "reason_placeholder": "Provide a reason for rejecting this claim...",
+        "cancel": "Cancel"
+      }
+    },
+    "analytics": {
+      "header": {
+        "title": "Analytics Dashboard",
+        "subtitle": "Claims performance metrics and insights"
+      },
+      "filters": {
+        "start_date": "Start Date",
+        "end_date": "End Date",
+        "clear": "Clear filters",
+        "range_from_to": "{{start}} to {{end}}",
+        "range_from": "From {{start}}",
+        "range_until": "Until {{end}}",
+        "range_all": "All time (no filter)"
+      },
+      "live_data": {
+        "label": "Live Data:",
+        "showing": "Showing analytics for",
+        "claims": "actual claims",
+        "with_total": "with total value of",
+        "filtered_suffix": "(filtered by date)"
+      },
+      "metrics": {
+        "avg_processing_time": "Avg. Processing Time",
+        "avg_processing_value": "4.2 hrs",
+        "fraud_detection": "Fraud Detection Rate",
+        "fraud_detection_value": "94.5%",
+        "auto_approval": "Auto-Approval Rate",
+        "auto_approval_value": "68%",
+        "total_claims": "Total Claims"
+      },
+      "charts": {
+        "by_type": "Claims by Type",
+        "status_distribution": "Status Distribution",
+        "monthly_trend": "Monthly Claims Trend (2026)",
+        "total_label": "Total"
+      },
+      "table": {
+        "title": "Performance by Claim Type",
+        "type": "Type",
+        "total": "Total",
+        "avg_amount": "Avg. Amount",
+        "approval_rate": "Approval Rate",
+        "avg_time": "Avg. Time"
+      },
+      "donut": {
+        "approved": "Approved",
+        "pending": "Pending",
+        "rejected": "Rejected",
+        "draft": "Draft"
+      },
+      "claim_types": {
+        "health": "Health",
+        "motor": "Motor",
+        "property": "Property",
+        "travel": "Travel"
+      },
+      "months": {
+        "jan": "Jan",
+        "feb": "Feb",
+        "mar": "Mar",
+        "apr": "Apr",
+        "may": "May"
+      }
+    },
+    "users": {
+      "header": {
+        "title": "User Management",
+        "subtitle": "Manage platform users and their roles",
+        "add_user": "+ Add User"
+      },
+      "stats": {
+        "total": "Total Users",
+        "policyholders": "Policyholders",
+        "adjudicators": "Adjudicators",
+        "admins": "Admins"
+      },
+      "filter": {
+        "all": "All Users"
+      },
+      "table": {
+        "loading": "Loading users...",
+        "user": "User",
+        "role": "Role",
+        "status": "Status",
+        "last_login": "Last Login",
+        "actions": "Actions",
+        "edit": "Edit",
+        "deactivate": "Deactivate",
+        "never_logged_in": "Never"
+      },
+      "add_modal": {
+        "title": "Add New User",
+        "user_id": "User ID",
+        "user_id_placeholder": "e.g. john_doe",
+        "email": "Email",
+        "email_placeholder": "user@example.com",
+        "full_name": "Full Name",
+        "full_name_placeholder": "John Doe",
+        "password": "Password",
+        "password_placeholder": "Minimum 6 characters",
+        "role": "Role",
+        "role_policyholder": "Policyholder",
+        "role_adjudicator": "Adjudicator",
+        "role_admin": "Admin",
+        "cancel": "Cancel",
+        "create": "Create User",
+        "creating": "Creating..."
+      },
+      "edit_modal": {
+        "title": "Edit User Role",
+        "user": "User",
+        "role": "Role",
+        "role_policyholder": "Policyholder",
+        "role_adjudicator": "Adjudicator",
+        "role_admin": "Admin",
+        "cancel": "Cancel",
+        "save": "Save Role",
+        "saving": "Saving..."
+      },
+      "errors": {
+        "all_required": "All fields are required.",
+        "create_failed": "Failed to create user. Please try again.",
+        "update_role_failed": "Failed to update role. Please try again.",
+        "deactivate_failed": "Failed to deactivate user.",
+        "deactivate_confirm": "Are you sure you want to deactivate user \"{{userId}}\"?"
+      }
+    },
+    "profile": {
+      "header": {
+        "title": "My Profile",
+        "subtitle": "View your account information and change your password"
+      },
+      "info": {
+        "title": "Account Information",
+        "user_id": "User ID",
+        "role": "Role",
+        "empty": "—"
+      },
+      "password": {
+        "title": "Change Password",
+        "current": "Current Password",
+        "current_placeholder": "Enter current password",
+        "new": "New Password",
+        "new_placeholder": "Enter new password",
+        "confirm": "Confirm New Password",
+        "confirm_placeholder": "Confirm new password",
+        "submit": "Update Password"
+      },
+      "messages": {
+        "all_required": "All fields are required.",
+        "passwords_do_not_match": "New passwords do not match.",
+        "password_too_short": "New password must be at least 8 characters.",
+        "coming_soon": "Password change functionality coming soon."
+      }
+    }
+  }
+}

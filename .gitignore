@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.venv/
+venv/
+env/
+*.egg-info/
+dist/
+build/
+
+# Node
+node_modules/
+frontend/build/
+frontend/.env.local
+frontend/.env.production
+
+# CDK
+infra/cdk.out/
+infra/.venv/
+cdk-outputs.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# AWS
+.aws-sam/
+
+# Env files
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# Test
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Docker
+*.tar
