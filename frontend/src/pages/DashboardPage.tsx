@@ -15,6 +15,7 @@ import {
   UsersIcon,
   BanknotesIcon,
   LockClosedIcon,
+  ArrowPathIcon,
 } from "@heroicons/react/24/outline";
 
 // Format amount in Indian numbering system
@@ -25,6 +26,50 @@ const formatINR = (amount: number): string => {
     maximumFractionDigits: 0,
   }).format(amount);
 };
+
+// Health-check threshold: any healthy response above this many ms shows the
+// service-health tile as amber "Slow". Set high enough to tolerate legitimate
+// cold-start latency on ECS Fargate tasks (API Gateway -> VPC Link -> NLB ->
+// container startup can genuinely take 3-5s on first hit after idle) while
+// still catching real degradation.
+const SLOW_RESPONSE_MS = 3000;
+
+// Server-authoritative per-status counts. Runs one lightweight query per
+// non-terminal status bucket to read `total` from the paginated response.
+// Cheaper than a full listClaims scan and always reflects the current DB
+// truth regardless of pagination.
+async function fetchStatsFromServer(): Promise<{
+  total: number;
+  pending: number;
+  approved: number;
+  rejected: number;
+  settled: number;
+  closed: number;
+}> {
+  // Frontend sends `page_size`, backend expects `size` — we intentionally send
+  // both so we work whether the deployed backend has been updated to accept
+  // page_size or still uses the original `size`.
+  const totalOnly = { page: 1, size: 1, page_size: 1 } as const;
+  const [total, drafts, submitted, underReview, pending, approved, rejected, settled, closed] = await Promise.all([
+    listClaims({ page: 1, size: 1, page_size: 1 } as any),
+    listClaims({ ...totalOnly, status: "draft" } as any),
+    listClaims({ ...totalOnly, status: "submitted" } as any),
+    listClaims({ ...totalOnly, status: "under_review" } as any),
+    listClaims({ ...totalOnly, status: "pending" } as any),
+    listClaims({ ...totalOnly, status: "approved" } as any),
+    listClaims({ ...totalOnly, status: "rejected" } as any),
+    listClaims({ ...totalOnly, status: "settlement" } as any),
+    listClaims({ ...totalOnly, status: "closed" } as any),
+  ]);
+  return {
+    total: total.total || 0,
+    pending: (drafts.total || 0) + (submitted.total || 0) + (underReview.total || 0) + (pending.total || 0),
+    approved: approved.total || 0,
+    rejected: rejected.total || 0,
+    settled: settled.total || 0,
+    closed: closed.total || 0,
+  };
+}
 
 // Format date as DD/MM/YYYY
 const formatDate = (dateStr: string): string => {
@@ -57,17 +102,14 @@ const DashboardPage: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await listClaims({ page: 1, page_size: 10 });
-        const items = response.items || [];
-        setClaims(items);
+        // Recent claims list for the activity panel — small page is fine.
+        const response = await listClaims({ page: 1, size: 10, page_size: 10 } as any);
+        setClaims(response.items || []);
 
-        const total = response.total || items.length;
-        const pending = items.filter((c) => ["submitted", "under_review", "pending", "draft"].includes(c.status)).length;
-        const approved = items.filter((c) => c.status === "approved").length;
-        const rejected = items.filter((c) => c.status === "rejected").length;
-        const settled = items.filter((c) => c.status === "settlement").length;
-        const closed = items.filter((c) => c.status === "closed").length;
-        setStats({ total, pending, approved, rejected, settled, closed });
+        // Server-authoritative per-status counts (independent of the page
+        // slice above). See fetchStatsFromServer for the query shape.
+        const s = await fetchStatsFromServer();
+        setStats(s);
       } catch (err) {
         console.error("Failed to fetch claims:", err);
       } finally {
@@ -260,7 +302,7 @@ const DashboardPage: React.FC = () => {
   }
 
   // Admin Dashboard
-  return <AdminDashboard claims={claims} stats={stats} />;
+  return <AdminDashboard claims={claims} stats={stats} onClaimsUpdate={setClaims} onStatsUpdate={setStats} />;
 };
 
 // Service health status types
@@ -276,7 +318,9 @@ interface ServiceHealth {
 const AdminDashboard: React.FC<{
   claims: Claim[];
   stats: { total: number; pending: number; approved: number; rejected: number; settled: number; closed: number };
-}> = ({ claims, stats }) => {
+  onClaimsUpdate: (claims: Claim[]) => void;
+  onStatsUpdate: (stats: { total: number; pending: number; approved: number; rejected: number; settled: number; closed: number }) => void;
+}> = ({ claims, stats, onClaimsUpdate, onStatsUpdate }) => {
   const { t } = useTranslation();
   const [services, setServices] = useState<ServiceHealth[]>([
     { name: t("common.dashboard.services.auth"), status: "checking", responseTime: null, lastChecked: null, endpoint: "/api/auth/validate" },
@@ -293,11 +337,26 @@ const AdminDashboard: React.FC<{
   const checkHealth = useCallback(async (path: string): Promise<{ status: "healthy" | "unhealthy"; responseTime: number }> => {
     const start = Date.now();
     try {
-      await api.get(path);
+      // 8-second per-request timeout: if the service does not answer within
+      // the SLA window, we mark it unhealthy rather than "very slow" — a
+      // CPU-pegged or overloaded backend that never returns is functionally
+      // unavailable to a user waiting on their browser.
+      await api.get(path, { timeout: 8000 });
       return { status: "healthy", responseTime: Date.now() - start };
-    } catch {
-      // If we get a response (even an error like 401/403), the service is up
-      return { status: "healthy", responseTime: Date.now() - start };
+    } catch (err: any) {
+      const responseTime = Date.now() - start;
+      const status = err?.response?.status;
+      // If we got an HTTP response with a client-error code (401, 403, 404),
+      // the service is up — it just refused this specific request. That's
+      // still "healthy" from an infrastructure perspective.
+      if (typeof status === "number" && status >= 400 && status < 500) {
+        return { status: "healthy", responseTime };
+      }
+      // Any other outcome (5xx, network error, timeout, no response) means
+      // the service is not answering — mark it unhealthy so the dashboard
+      // reflects reality when a task has OOMed, the target group has no
+      // healthy hosts, or the backend is too slow to respond within the SLA.
+      return { status: "unhealthy", responseTime };
     }
   }, []);
 
@@ -370,21 +429,48 @@ const AdminDashboard: React.FC<{
   const handleSimulate = async () => {
     setSimulating(true);
     setSimResult(null);
+    const total = 150;
+    let succeeded = 0;
+    let failed = 0;
+    // Run in parallel batches so the browser does not open 150 sockets at once
+    // and so the participant can see progress. Each batch reports its running
+    // total via the simResult banner.
+    const batchSize = 10;
     try {
-      const resp = await api.post("/api/claims/simulate/lifecycle");
-      const claim = resp.data;
+      for (let i = 0; i < total; i += batchSize) {
+        const batch = Array.from({ length: Math.min(batchSize, total - i) }, () =>
+          api.post("/api/claims/simulate/lifecycle")
+        );
+        const results = await Promise.allSettled(batch);
+        for (const r of results) {
+          if (r.status === "fulfilled") succeeded += 1;
+          else failed += 1;
+        }
+        setSimResult(
+          t("common.dashboard.simulation.progress", {
+            done: succeeded + failed,
+            total,
+            failed,
+          })
+        );
+      }
       setSimResult(
-        t("common.dashboard.simulation.success", {
-          type: claim.claim_type,
-          amount: Number(claim.amount).toLocaleString("en-IN"),
-          status: claim.status,
+        t("common.dashboard.simulation.success_bulk", {
+          count: succeeded,
+          total,
+          failed,
         })
       );
-      // Refresh stats
-      const response = await listClaims({ page: 1, page_size: 100 });
-      const items = response.items || [];
-      // This won't update parent stats, but the message is enough
-      void items;
+      // Refresh the visible stats in place — no page reload (that would drop
+      // the in-memory JWT and force the participant to sign in again).
+      try {
+        const response = await listClaims({ page: 1, size: 20, page_size: 20 } as any);
+        onClaimsUpdate(response.items || []);
+        const s = await fetchStatsFromServer();
+        onStatsUpdate(s);
+      } catch {
+        // Ignore refresh error — the banner shows the run completed.
+      }
     } catch (err: any) {
       setSimResult(
         t("common.dashboard.simulation.failed", {
@@ -447,9 +533,20 @@ const AdminDashboard: React.FC<{
 
       {/* Service Health Checks */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-200/60 p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <ServerStackIcon className="w-5 h-5 text-gray-700" />
-          <h3 className="text-lg font-semibold text-gray-900">{t("common.dashboard.service_health.title")}</h3>
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <ServerStackIcon className="w-5 h-5 text-gray-700" />
+            <h3 className="text-lg font-semibold text-gray-900">{t("common.dashboard.service_health.title")}</h3>
+          </div>
+          <button
+            onClick={runHealthChecks}
+            disabled={services.some((s) => s.status === "checking")}
+            title={t("common.dashboard.service_health.refresh")}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-600 bg-gray-50 hover:bg-gray-100 border border-gray-200 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <ArrowPathIcon className={`w-4 h-4 ${services.some((s) => s.status === "checking") ? "animate-spin" : ""}`} />
+            {t("common.dashboard.service_health.refresh")}
+          </button>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
           {services.map((svc) => (
@@ -460,8 +557,10 @@ const AdminDashboard: React.FC<{
               <div className="flex items-center gap-2">
                 <span
                   className={`w-2.5 h-2.5 rounded-full ${
-                    svc.status === "healthy"
+                    svc.status === "healthy" && (svc.responseTime === null || svc.responseTime <= SLOW_RESPONSE_MS)
                       ? "bg-green-500"
+                      : svc.status === "healthy" && svc.responseTime !== null && svc.responseTime > SLOW_RESPONSE_MS
+                      ? "bg-yellow-500"
                       : svc.status === "unhealthy"
                       ? "bg-red-500"
                       : "bg-gray-400"
@@ -470,8 +569,11 @@ const AdminDashboard: React.FC<{
                 <span className="text-sm font-medium text-gray-900">{svc.name}</span>
               </div>
               <div className="text-xs text-gray-500">
-                {svc.status === "healthy" && (
+                {svc.status === "healthy" && (svc.responseTime === null || svc.responseTime <= SLOW_RESPONSE_MS) && (
                   <span className="text-green-600 font-medium">{t("common.dashboard.service_health.healthy")}</span>
+                )}
+                {svc.status === "healthy" && svc.responseTime !== null && svc.responseTime > SLOW_RESPONSE_MS && (
+                  <span className="text-yellow-600 font-medium">{t("common.dashboard.service_health.slow")}</span>
                 )}
                 {svc.status === "unhealthy" && (
                   <span className="text-red-600 font-medium">{t("common.dashboard.service_health.unhealthy")}</span>

@@ -102,25 +102,41 @@ def inject_via_update(ecs_client, cluster: str, service_arn: str, region: str):
 
     # CPU-burn sidecar: simulates an expensive INNER JOIN query. The command is
     # a fixed constant passed as an argument list to the container runtime.
+    # The payload uses exec() with a multi-line string so the `while`/`for`
+    # compound statements parse correctly — a semicolon-joined one-liner is a
+    # SyntaxError.
+    #
+    # Uses multiprocessing to spawn N workers that each burn a full CPU core.
+    # Fargate publishes CPUUtilization as a percentage of allocated task CPU,
+    # so a single-threaded loop only pins ~25-50% of task CPU. Multiple
+    # workers push utilisation reliably above the 50% alarm threshold.
+    cpu_burn_payload = (
+        "import hashlib, time, sys, os\n"
+        "from multiprocessing import Process\n"
+        "sys.stdout.write('[FAULT] Bad query INNER JOIN simulation started\\n')\n"
+        "sys.stdout.flush()\n"
+        "def burn():\n"
+        "    start = time.time()\n"
+        "    while time.time() - start < 600:\n"
+        "        for i in range(100000):\n"
+        "            hashlib.sha256(str(i).encode()).hexdigest()\n"
+        "workers = [Process(target=burn) for _ in range(4)]\n"
+        "for w in workers:\n"
+        "    w.start()\n"
+        "for w in workers:\n"
+        "    w.join()\n"
+    )
     cpu_burn_container = {
         "name": "bad-query-simulator",
         "image": "python:3.12-slim",
         "essential": False,
-        "cpu": 256,
-        "memory": 128,
-        "command": [
-            "python3", "-c",
-            (
-                "import hashlib, time, os, sys; "
-                "sys.stdout.write('[FAULT] Bad query INNER JOIN simulation started\\n'); "
-                "sys.stdout.flush(); "
-                "start = time.time(); "
-                "while time.time() - start < 600: "
-                "    for i in range(100000): "
-                "        hashlib.sha256(str(i).encode()).hexdigest(); "
-                "    time.sleep(0.01)"
-            ),
-        ],
+        # No explicit cpu/memory cap: on a 512-unit task the sidecar was pinned
+        # to ~33% CPU because a hard 256 cap left the main container free to
+        # keep running. Letting it inherit the task-level pool means it burns
+        # everything the app is not using, which reliably crosses the 60%
+        # HighCPU alarm threshold.
+        "memory": 256,
+        "command": ["python3", "-c", cpu_burn_payload],
         "logConfiguration": {
             "logDriver": "awslogs",
             "options": {

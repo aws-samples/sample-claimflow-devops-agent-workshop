@@ -33,7 +33,7 @@ CONFIG = {
     },
     "monitoring": {
         "log_retention_days": 30,
-        "ecs_cpu_alarm_threshold": 80,
+        "ecs_cpu_alarm_threshold": 50,
         "ecs_memory_alarm_threshold": 80,
         "api_5xx_alarm_threshold": 1,
     },

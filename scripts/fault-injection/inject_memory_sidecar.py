@@ -90,24 +90,30 @@ def inject_memory_sidecar(
         "essential": True,  # Essential=True means task dies when this container OOMs
         "cpu": 64,
         "memory": 512,  # Give it 512MB — it will try to allocate more
+        # The payload uses a multi-line source string so the `for` compound
+        # statement parses correctly — a semicolon-joined one-liner is a
+        # SyntaxError.
+        #
+        # Fast-leak: allocate ~40 MB/s so the 1024 MiB task limit is hit within
+        # about 25-30 seconds. The subsequent OOM kill + ECS restart + repeat
+        # creates a crash loop that keeps RunningTaskCount below 1 for at
+        # least one 60-second period, so the ClaimFlow-fraud-service-NoRunningTasks
+        # alarm fires within 2-3 minutes of inject.
         "command": [
             "python3", "-c",
             (
-                "import sys, time, os; "
-                "sys.stdout.write(f'[ml-model-loader] Starting fraud detection model load (PID {os.getpid()})\\n'); "
-                "sys.stdout.flush(); "
-                "# Simulate progressive memory leak from ML model caching\\n"
-                "chunks = []; "
-                "time.sleep(30); "  # Wait 30s before starting to fill memory (looks realistic)
-                "sys.stdout.write('[ml-model-loader] Loading model weights into memory...\\n'); "
-                "sys.stdout.flush(); "
-                "for i in range(200): "
-                "    chunk = b'X' * (5 * 1024 * 1024); "  # Allocate 5MB per iteration
-                "    chunks.append(chunk); "
-                "    mb = (i + 1) * 5; "
-                "    sys.stdout.write(f'[ml-model-loader] Cached {mb}MB of model weights\\n'); "
-                "    sys.stdout.flush(); "
-                "    time.sleep(2)"  # Gradual — 5MB every 2 seconds
+                "import sys, time, os\n"
+                "sys.stdout.write(f'[ml-model-loader] Starting fraud detection model load (PID {os.getpid()})\\n')\n"
+                "sys.stdout.flush()\n"
+                "# Simulate a runaway ML model cache that fills memory quickly.\n"
+                "chunks = []\n"
+                "for i in range(500):\n"
+                "    chunk = b'X' * (20 * 1024 * 1024)  # Allocate 20MB per iteration\n"
+                "    chunks.append(chunk)\n"
+                "    mb = (i + 1) * 20\n"
+                "    sys.stdout.write(f'[ml-model-loader] Cached {mb}MB of model weights\\n')\n"
+                "    sys.stdout.flush()\n"
+                "    time.sleep(0.5)  # ~40MB/s — hits 1024MiB task limit in about 25s\n"
             ),
         ],
         "logConfiguration": {
@@ -138,7 +144,11 @@ def inject_memory_sidecar(
     print(f"  ✓ Registered new task definition: {new_task_def_arn.split('/')[-1]}")
     print(f"  ✓ Added 'ml-model-loader' sidecar (essential=true)")
 
-    # Update service to use new task definition
+    # Update service to use new task definition. Set minimumHealthyPercent=0
+    # so ECS doesn't keep the previous healthy task alive during the rolling
+    # deployment — we want RunningTaskCount to hit zero as soon as the OOM
+    # crash loop starts, otherwise the ClaimFlow-fraud-service-NoRunningTasks
+    # alarm never fires.
     print("[4/4] Deploying faulty task definition...")
     service_name = service_arn.split("/")[-1]
     ecs_client.update_service(
@@ -146,8 +156,32 @@ def inject_memory_sidecar(
         service=service_name,
         taskDefinition=new_task_def_arn,
         forceNewDeployment=True,
+        deploymentConfiguration={
+            "minimumHealthyPercent": 0,
+            "maximumPercent": 200,
+            "deploymentCircuitBreaker": {"enable": False, "rollback": False},
+        },
     )
     print(f"  ✓ Updated {target_service} with memory-stress sidecar")
+    print(f"  ✓ Deployment set to minimumHealthyPercent=0 so old task can drain")
+
+    # Immediately stop the currently-running old task so ECS has to place the
+    # new (OOM-prone) task. Without this, the rolling deployment would keep
+    # the old task alive indefinitely while the new task fails to stabilise,
+    # and RunningTaskCount would stay at 1 forever.
+    old_tasks = ecs_client.list_tasks(
+        cluster=cluster, serviceName=service_name, desiredStatus="RUNNING"
+    ).get("taskArns", [])
+    for old_task_arn in old_tasks:
+        try:
+            ecs_client.stop_task(
+                cluster=cluster,
+                task=old_task_arn,
+                reason="Injection: forcing new task-def to take over",
+            )
+            print(f"  ✓ Stopped previous task {old_task_arn.split('/')[-1]}")
+        except Exception as e:
+            print(f"  ! Could not stop task {old_task_arn.split('/')[-1]}: {e}")
     print(f"  ✓ New deployment rolling out...")
     print()
     print("  ┌─────────────────────────────────────────────────────────┐")

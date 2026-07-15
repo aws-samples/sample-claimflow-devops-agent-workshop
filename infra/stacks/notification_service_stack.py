@@ -57,7 +57,8 @@ class NotificationServiceStack(Stack):
             },
         )
 
-        # IAM permissions — DynamoDB
+        # IAM permissions — DynamoDB. Scan is used by /api/notifications/log
+        # which lists recent notifications for the admin dashboard.
         self.service_construct.task_role.add_to_policy(
             iam.PolicyStatement(
                 actions=[
@@ -65,6 +66,7 @@ class NotificationServiceStack(Stack):
                     "dynamodb:PutItem",
                     "dynamodb:UpdateItem",
                     "dynamodb:Query",
+                    "dynamodb:Scan",
                 ],
                 resources=[
                     notification_log_table_arn,

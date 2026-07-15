@@ -19,6 +19,7 @@ from stacks.rules_service_stack import RulesServiceStack
 from stacks.analytics_service_stack import AnalyticsServiceStack
 from stacks.api_gateway_stack import ApiGatewayStack
 from stacks.frontend_stack import FrontendStack
+from stacks.alarms_stack import AlarmsStack
 
 app = cdk.App()
 
@@ -163,6 +164,34 @@ analytics_service_stack = AnalyticsServiceStack(
     env=env,
 )
 analytics_service_stack.add_dependency(auth_service_stack)
+
+# Phase 4b: Alarms — runs after every service stack so it can consume each
+# FargateService's ServiceName token via metric dimensions_map. All alarms
+# fan out through the SNS topic in MonitoringStack to the DevOps Agent
+# webhook Lambda.
+alarms_stack = AlarmsStack(
+    app,
+    f"{project}-alarms",
+    config=CONFIG,
+    alarm_topic=monitoring_stack.alarm_topic,
+    services={
+        "auth-service": auth_service_stack.service_construct.service,
+        "claim-service": claim_service_stack.service_construct.service,
+        "fraud-service": fraud_service_stack.service_construct.service,
+        "document-service": document_service_stack.service_construct.service,
+        "notification-service": notification_service_stack.service_construct.service,
+        "rules-service": rules_service_stack.service_construct.service,
+        "analytics-service": analytics_service_stack.service_construct.service,
+    },
+    env=env,
+)
+alarms_stack.add_dependency(auth_service_stack)
+alarms_stack.add_dependency(claim_service_stack)
+alarms_stack.add_dependency(fraud_service_stack)
+alarms_stack.add_dependency(document_service_stack)
+alarms_stack.add_dependency(notification_service_stack)
+alarms_stack.add_dependency(rules_service_stack)
+alarms_stack.add_dependency(analytics_service_stack)
 
 # Phase 5: API Gateway
 # Map each API route to its backing ECS service. The API Gateway stack creates

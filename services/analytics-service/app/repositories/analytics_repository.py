@@ -61,6 +61,27 @@ class AnalyticsRepository:
         logger.info(f"Scanned {len(items)} claims from DynamoDB")
         return items
 
+    def _ensure_schema(self, cur) -> None:
+        """Create the analytics table if it doesn't exist.
+
+        Idempotent, called from both sync_to_aurora and get_metrics so a read
+        against an unsynced database returns an empty result set instead of
+        an UndefinedTable error.
+        """
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS claims_analytics (
+                claim_id VARCHAR(64) PRIMARY KEY,
+                claim_type VARCHAR(32),
+                status VARCHAR(32),
+                amount DECIMAL(12, 2),
+                fraud_score DECIMAL(5, 4),
+                submitted_at TIMESTAMP,
+                resolved_at TIMESTAMP,
+                processing_time_hours DECIMAL(10, 2),
+                synced_at TIMESTAMP DEFAULT NOW()
+            )
+        """)
+
     def sync_to_aurora(self, claims: list[dict[str, Any]]) -> int:
         """Write claims data to Aurora PostgreSQL analytics tables."""
         if not claims:
@@ -69,20 +90,7 @@ class AnalyticsRepository:
         conn = self._get_aurora_connection()
         try:
             with conn.cursor() as cur:
-                # Ensure analytics table exists
-                cur.execute("""
-                    CREATE TABLE IF NOT EXISTS claims_analytics (
-                        claim_id VARCHAR(64) PRIMARY KEY,
-                        claim_type VARCHAR(32),
-                        status VARCHAR(32),
-                        amount DECIMAL(12, 2),
-                        fraud_score DECIMAL(5, 4),
-                        submitted_at TIMESTAMP,
-                        resolved_at TIMESTAMP,
-                        processing_time_hours DECIMAL(10, 2),
-                        synced_at TIMESTAMP DEFAULT NOW()
-                    )
-                """)
+                self._ensure_schema(cur)
 
                 # Upsert claims data
                 values = []
@@ -144,6 +152,10 @@ class AnalyticsRepository:
         conn = self._get_aurora_connection()
         try:
             with conn.cursor() as cur:
+                # Ensure the table exists — a read against a database that has
+                # never been synced would otherwise fail with UndefinedTable.
+                self._ensure_schema(cur)
+                conn.commit()
                 # Build the query using psycopg2.sql composition. Filter values
                 # are passed as bound parameters; the WHERE clause is assembled
                 # from composable sql.SQL objects rather than string formatting,

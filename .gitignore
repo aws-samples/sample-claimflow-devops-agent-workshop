@@ -50,3 +50,7 @@ htmlcov/
 
 # Docker
 *.tar
+
+# Extra CDK dev venvs
+.venv-cdktest/
+infra/.venv-cdktest/

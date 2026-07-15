@@ -54,7 +54,6 @@ sample-claimflow-devops-agent-workshop/
 ├── infra/                    # AWS CDK infrastructure (Python)
 ├── scripts/                  # Automation + fault-injection scenarios
 │   └── fault-injection/      # DevOps Agent demo fault scenarios
-├── docs/                     # Additional documentation
 ├── deploy.sh                 # One-command deployment script
 ├── LICENSE                   # MIT-0
 ├── THIRD-PARTY-LICENSES      # Attribution for third-party dependencies
@@ -142,14 +141,6 @@ The CDK stack enables a few defaults that are convenient for a demo or workshop 
 - **`enable_execute_command=True`** on the ECS services. The fault-injection scripts use `aws ecs execute-command` to inject faults into running containers. This setting opens an SSM-based shell into every task and should be set to `False` (the default for production workloads) outside a workshop sandbox.
 - **`SEED_DEFAULT_USERS=true`** on the auth-service. Seeds three well-known demo accounts on first startup. Set to `false` for any deployment that will be reachable beyond your own sandbox account.
 - **`removal_policy=DESTROY`** on Aurora, DynamoDB tables, and the frontend S3 bucket. Makes teardown a one-command operation. Switch to `RETAIN` (or back up first) if the data has any value.
-
-## Documentation
-
-- [Deployment Guide](docs/DEPLOYMENT_GUIDE.md)
-- [User Guide](docs/USER_GUIDE.md)
-- [Demo Guide](docs/DEMO_GUIDE.md)
-- [DevOps Agent Demo](docs/DEVOPS_AGENT_DEMO.md)
-- [DevOps Agent Setup](docs/DEVOPS_AGENT_SETUP.md)
 
 ## Estimated cost
 

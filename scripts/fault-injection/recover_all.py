@@ -105,13 +105,21 @@ def recover_service(ecs_client, cluster: str, service_keyword: str, service_labe
     else:
         print(f"  ✓ Found clean task definition: {original_td_arn.split('/')[-1]}")
 
-    # Update service to use clean task definition
+    # Update service to use clean task definition. Restore default deployment
+    # config (100/200, circuit breaker enabled) so the service behaves normally
+    # again — inject_memory_sidecar.py had set minimumHealthyPercent=0 to force
+    # the crash loop.
     service_name = service_arn.split("/")[-1]
     ecs_client.update_service(
         cluster=cluster,
         service=service_name,
         taskDefinition=original_td_arn,
         forceNewDeployment=True,
+        deploymentConfiguration={
+            "minimumHealthyPercent": 100,
+            "maximumPercent": 200,
+            "deploymentCircuitBreaker": {"enable": True, "rollback": True},
+        },
     )
     print(f"  ✓ {service_label} — reverted to clean task definition")
     return True

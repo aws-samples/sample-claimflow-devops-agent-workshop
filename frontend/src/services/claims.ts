@@ -47,6 +47,7 @@ export const listClaims = async (params?: {
   claim_type?: string;
   page?: number;
   page_size?: number;
+  size?: number;
 }): Promise<ClaimListResponse> => {
   const response = await api.get<ClaimListResponse>("/api/claims", { params });
   return response.data;

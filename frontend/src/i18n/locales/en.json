@@ -161,11 +161,13 @@
       "service_health": {
         "title": "Service Health",
         "healthy": "Healthy",
+        "slow": "Slow",
         "unhealthy": "Unhealthy",
         "not_connected": "Not Connected to ALB",
         "checking": "Checking...",
         "response_prefix": "Response:",
-        "response_value": "{{ms}}ms"
+        "response_value": "{{ms}}ms",
+        "refresh": "Refresh"
       },
       "services": {
         "auth": "Auth Service",
@@ -210,6 +212,8 @@
       },
       "simulation": {
         "success": "✅ Simulated {{type}} claim (₹{{amount}}) → {{status}}",
+        "progress": "⏳ Processing {{done}} of {{total}} claim lifecycles ({{failed}} failed)…",
+        "success_bulk": "✅ Simulated {{count}} of {{total}} claim lifecycles ({{failed}} failed). Stats refreshed.",
         "failed": "❌ Simulation failed: {{message}}",
         "unknown_error": "Unknown error"
       }
