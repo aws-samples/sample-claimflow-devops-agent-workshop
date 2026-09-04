@@ -13,7 +13,7 @@ high CPU, increased latency, and potential 5xx errors.
 
 Usage:
     python inject_ddos.py --profile <aws-profile>
-    python inject_ddos.py --profile <aws-profile> --attackers 3 --duration 300
+    python inject_ddos.py --profile <aws-profile> --attackers 50 --duration 600
 """
 
 import argparse
@@ -100,8 +100,8 @@ def inject_ddos(
     profile: str,
     cluster: str = "claim-processing-cluster",
     region: str = "us-east-1",
-    num_attackers: int = 3,
-    duration: int = 300,
+    num_attackers: int = 50,
+    duration: int = 600,
 ):
     """
     Launch attacker ECS tasks that flood the claim-service with HTTP requests.
@@ -279,8 +279,8 @@ if __name__ == "__main__":
     parser.add_argument("--profile", default=None, help="AWS profile name (omit to use ambient credentials, e.g. in CloudShell)")
     parser.add_argument("--cluster", default="claim-processing-cluster", help="ECS cluster name")
     parser.add_argument("--region", default="us-east-1", help="AWS region")
-    parser.add_argument("--attackers", type=int, default=3, help="Number of attacker tasks to launch")
-    parser.add_argument("--duration", type=int, default=300, help="Attack duration in seconds")
+    parser.add_argument("--attackers", type=int, default=50, help="Number of attacker tasks to launch")
+    parser.add_argument("--duration", type=int, default=600, help="Attack duration in seconds")
     args = parser.parse_args()
 
     inject_ddos(args.profile, args.cluster, args.region, args.attackers, args.duration)
