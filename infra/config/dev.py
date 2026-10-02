@@ -6,7 +6,14 @@ CONFIG = {
     "project_name": "claim-processing",
     "vpc": {
         "cidr": "10.0.0.0/16",
-        "max_azs": 2,
+        # Span all Availability Zones in the region (us-east-1 has 6: a-f) so the
+        # Aurora DB subnet group can place in whichever AZ has instance-class
+        # capacity. The capacity error that motivated this had capacity only in
+        # us-east-1d/1f, which a 2- or 3-AZ VPC never reaches. CDK caps this at
+        # the number of AZs actually available, and requires an account-aware
+        # stack (see app.py) because environment-agnostic stacks are limited to
+        # 2 AZs. More AZs add a few extra interface-endpoint ENIs (minor cost).
+        "max_azs": 6,
         "nat_gateways": 1,
     },
     "ecs": {
@@ -18,6 +25,13 @@ CONFIG = {
         "cpu_scaling_target": 70,
     },
     "aurora": {
+        # Aurora writer/reader instance class (now wired through to
+        # database_stack.py). If a deploy fails with an Availability-Zone
+        # capacity error for this class, switch to another broadly-available
+        # class and redeploy, e.g. "t3.medium", "r6g.large", or "r6g.xlarge".
+        # Aurora provisioned instances take a single class, so there is no
+        # automatic multi-type fallback; combined with the multi-AZ VPC this is
+        # the fast manual recovery lever.
         "instance_class": "t4g.medium",
         "database_name": "claims_analytics",
         "backup_retention_days": 7,

@@ -23,7 +23,18 @@ from stacks.alarms_stack import AlarmsStack
 
 app = cdk.App()
 
-env = cdk.Environment(region=CONFIG["aws_region"])
+# Bind the stacks to a concrete account/region. An environment-agnostic stack
+# (region only, no account) is capped by CDK at 2 Availability Zones, which
+# pins the VPC — and therefore the Aurora DB subnet group — to just the first
+# two AZs (e.g. us-east-1a/1b). When those AZs lack capacity for the Aurora
+# instance class, the database stack fails to create and rolls back. Supplying
+# the account (from the CDK CLI's CDK_DEFAULT_ACCOUNT, set from the deploy
+# credentials) lets CDK enumerate the account's real AZs so `vpc.max_azs` can
+# span more than two and Aurora can place in an AZ that has capacity.
+env = cdk.Environment(
+    account=os.environ.get("CDK_DEFAULT_ACCOUNT"),
+    region=CONFIG["aws_region"],
+)
 project = CONFIG["project_name"]
 
 # ─────────────────────────────────────────────────

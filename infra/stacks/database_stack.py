@@ -186,16 +186,12 @@ class DatabaseStack(Stack):
             default_database_name=aurora_config["database_name"],
             writer=rds.ClusterInstance.provisioned(
                 "Writer",
-                instance_type=ec2.InstanceType.of(
-                    ec2.InstanceClass.BURSTABLE4_GRAVITON, ec2.InstanceSize.MEDIUM
-                ),
+                instance_type=ec2.InstanceType(aurora_config["instance_class"]),
             ),
             readers=[
                 rds.ClusterInstance.provisioned(
                     "Reader",
-                    instance_type=ec2.InstanceType.of(
-                        ec2.InstanceClass.BURSTABLE4_GRAVITON, ec2.InstanceSize.MEDIUM
-                    ),
+                    instance_type=ec2.InstanceType(aurora_config["instance_class"]),
                 ),
             ],
             vpc=vpc,
